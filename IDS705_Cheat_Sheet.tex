@@ -1,0 +1,379 @@
+\documentclass[6.5pt,landscape]{article}
+\usepackage{multicol}
+\usepackage{calc}
+\usepackage[landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{makecell}
+\pagestyle{empty}
+\geometry{top=.13in,left=.13in,right=.13in,bottom=.13in}
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}{0.3ex plus 0.05ex}{0.05ex}{\normalfont\scriptsize\bfseries\itshape}}
+\makeatother
+\setcounter{secnumdepth}{0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+\setlength{\itemsep}{0pt}
+% thin divider within a section
+\newcommand{\rl}{\vspace{-1.5pt}\par\noindent\rule{\columnwidth}{0.15pt}\par\vspace{-1pt}}
+% thick divider above each section heading
+\newcommand{\sectionrule}{\vspace{-1pt}\par\noindent\rule{\columnwidth}{0.4pt}\par\vspace{-2pt}}
+% italic labels
+\newcommand{\use}[1]{\textit{\textbf{Use when:} #1}}
+\newcommand{\bv}[1]{\textit{\textbf{Bias$\leftrightarrow$Var:} #1}}
+\newcommand{\hp}[1]{\textit{\textbf{Key HPs:} #1}}
+\newcommand{\norm}[1]{\|#1\|}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bbeta}{\boldsymbol{\beta}}
+\newcommand{\bmu}{\boldsymbol{\mu}}
+\newcommand{\bSigma}{\boldsymbol{\Sigma}}
+\newcommand{\btheta}{\boldsymbol{\theta}}
+\newcommand{\E}{\mathbb{E}}
+\begin{document}
+\raggedright
+\fontsize{5.8pt}{6.8pt}\selectfont
+\setlength{\baselineskip}{6.8pt}
+\begin{multicols*}{4}
+\setlength{\premulticols}{0pt}
+\setlength{\postmulticols}{0pt}
+\setlength{\multicolsep}{0pt}
+\setlength{\columnsep}{4pt}
+\setlength{\columnseprule}{0.3pt}
+\noindent{\footnotesize\textbf{Machine Learning}}\par
+\noindent\rule{\columnwidth}{0.5pt}\par
+%==================================================
+\sectionrule
+\section{Probability \& Estimation}
+\noindent\textbf{Bayes' Theorem} (how to update beliefs given evidence):\par
+$P(Y|X)=\frac{P(X|Y)P(Y)}{P(X)}$; denominator: $P(X)=\sum_k P(X|Y_k)P(Y_k)$\par
+Independent: $P(X,Y)=P(X)P(Y)$; uncorrelated: $\E[XY]=\E[X]\E[Y]$\par
+\rl
+\noindent\textbf{MLE} (pick $\theta$ that makes data most likely):\par
+$\hat{\theta}=\arg\max_\theta\sum_i\log p(x_i|\theta)$. Gaussian: $\hat{\mu}=\bar{x}$, $\hat{\sigma}^2=\frac{1}{n}\sum(x_i-\bar{x})^2$\par
+\textbf{MAP} (MLE $+$ prior belief about $\theta$):\par
+$\hat{\theta}=\arg\max[\log p(\text{data}|\theta)+\log p(\theta)]$\par
+Ridge$\equiv$Gaussian prior; LASSO$\equiv$Laplace prior (connection to regularization!).\par
+\rl
+\noindent $\text{Var}(X)=\E[X^2]-(\E[X])^2$;\quad $\mathcal{N}(x|\mu,\sigma^2)=\frac{1}{\sqrt{2\pi\sigma^2}}e^{-(x-\mu)^2/2\sigma^2}$\par
+%==================================================
+\sectionrule
+\section{Bias-Variance Tradeoff}
+\noindent$\underbrace{\text{Expected Test MSE}}_{\text{total error}}=\underbrace{(\E[\hat{f}]-f)^2}_{\text{Bias}^2}+\underbrace{\E[(\hat{f}-\E[\hat{f}])^2]}_{\text{Variance}}+\underbrace{\sigma^2_\epsilon}_{\text{irreducible}}$\par
+\textbf{Bias} = error from wrong model assumptions (too simple $\to$ underfits).\par
+\textbf{Variance} = sensitivity to which training data you happen to get (too complex $\to$ overfits).\par
+\textbf{Irreducible noise} $\sigma^2_\epsilon$: cannot be reduced no matter the model.\par
+Model complexity$\uparrow\Rightarrow$ bias$\downarrow$, var$\uparrow$. Regularization$\Rightarrow$ bias$\uparrow$, var$\downarrow$.\par
+Test error forms a U-shape vs.\ complexity; optimal = minimum of that U.\par
+%==================================================
+\sectionrule
+\section{When to Use (and Not Use) ML}
+\noindent\textbf{Use ML when:} pattern too complex for hand-coded rules; large labeled data available; performance improves with more data; outcome is measurable.\par
+\textbf{Don't use ML when:} a simple rule-based system works; data is too scarce; full explainability required (legal/medical); problem not well-defined; cost of errors is too high to accept a black box.\par
+\textbf{Before modeling:} define target variable; assess data quantity/quality; establish a simple baseline; clarify error costs.\par
+%==================================================
+\sectionrule
+\section{KNN (K-Nearest Neighbors)}
+\noindent Predict by averaging (regression) or majority vote (classification) over the $k$ closest training points. Non-parametric: no model is learned, just memorizes data.\par
+\use{Nonlinear boundaries; small datasets; interpretable local predictions.}\par
+\bv{$k\downarrow$: each point gets its own neighborhood $\to$ low bias, high var (wiggly, overfits). $k\uparrow$: average over large region $\to$ high bias, low var (over-smoothed). $k=1$ perfectly fits training set.}\par
+\hp{$k$ (tune by CV, typical 3--20); distance metric (Euclidean default; scale features first!).}\par
+%==================================================
+\sectionrule
+\section{Linear Regression}
+\noindent Models $y$ as a linear function of inputs: $\hat{y}=\bX\bbeta$; minimizes RSS $=\norm{\by-\bX\bbeta}^2$.\par
+\textbf{OLS closed form:} $\hat{\bbeta}=(\bX^\top\bX)^{-1}\bX^\top\by$ (requires $\bX^\top\bX$ invertible).\par
+\textbf{Gauss-Markov:} OLS is BLUE when $\E[\epsilon]=0$, $\mathrm{Var}(\epsilon)=\sigma^2\mathbf{I}$.\par
+\textbf{GD alternative:} $\bbeta\leftarrow\bbeta-\eta\nabla_{\bbeta}\text{RSS}$; $\nabla=2\bX^\top(\bX\bbeta-\by)$.\par
+\textbf{Nonlinear features:} replace $\bx$ with $\phi(\bx)=[1,x,x^2,\ldots]$; same OLS formula applies.\par
+$R^2=1-SS_{res}/SS_{tot}$; adjusted $R^2$ penalizes extra predictors. High VIF ($>$10) signals collinearity.\par
+\textbf{Feature selection:} \emph{forward} starts empty and adds best predictor each step; \emph{backward} starts full and removes least useful predictor each step.\par
+\textbf{Norms / projection:} $\norm{\bx}_1=\sum_i|x_i|$, $\norm{\bx}_2=\sqrt{\sum_i x_i^2}$, $\mathrm{proj}_{\by}(\bx)=\frac{\bx^\top\by}{\by^\top\by}\by$.\par
+\use{Continuous outcome; interpretable coefficients; roughly linear relationship.}\par
+\bv{OLS: unregularized $\to$ zero bias (if model correct) but high var when $p$ large. Adding polynomial features: bias$\downarrow$, var$\uparrow$.}\par
+\hp{Polynomial degree $d$ (bias$\downarrow$/var$\uparrow$ as $d\uparrow$); regularization $\lambda$; learning rate $\eta$ for GD.}\par
+\textbf{Assumptions (LINE):} \textbf{Linearity} $\E[Y\mid X]=X\beta$ (linear in parameters);\ \textbf{Independence} observations/errors independent;\ \textbf{Normality} errors approx. normal (mainly for CI/tests);\ \textbf{Equal variance} $\mathrm{Var}(\varepsilon_i\mid X)=\sigma^2$ (homoscedasticity).\par
+\textbf{Heteroscedasticity:} non-constant error variance; residual spread changes with fitted values $\Rightarrow$ OLS still unbiased but inefficient, SEs/p-values unreliable; fix with transform, better features/interactions, or robust SEs.\par
+\textbf{Multicollinearity:} predictors highly correlated $\Rightarrow$ unstable coefficients, large SEs, sign flips possible; check VIF; ridge helps.\par
+\textbf{Leverage:} unusual $x$ far from predictor center; hat value $h_{ii}=x_i^\top(X^\top X)^{-1}x_i$; high leverage means strong potential to affect fit.\par
+\textbf{Influential point:} materially changes fitted model, often high leverage $+$ large residual; check Cook's distance.\par
+\textbf{Outlier:} unusual $y$ given $x$ (large residual). \textbf{Key distinction:} outlier $=$ unusual response; leverage $=$ unusual predictors; influential $=$ changes fit a lot.\par
+\textbf{Diagnostics:} residuals vs fitted $\rightarrow$ nonlinearity/heteroscedasticity; Q-Q plot $\rightarrow$ normality; good residual plot looks random/patternless.
+%==================================================
+\sectionrule
+\section{Logistic Regression \& Perceptron}
+\noindent\textbf{Logistic regression} models $P(Y=1|\bx)$ directly (discriminative). Models log-odds as linear:\par
+$\log\frac{p}{1-p}=\bx^\top\bbeta \;\Rightarrow\; P(Y{=}1|\bx)=\sigma(\bx^\top\bbeta)=\frac{1}{1+e^{-\bx^\top\bbeta}}\in(0,1)$\par
+\textbf{Cross-entropy loss:} $\mathcal{L}=-\frac{1}{n}\sum_i[y_i\log\hat{p}_i+(1-y_i)\log(1-\hat{p}_i)]$\par
+No closed form; optimize by GD. Gradient: $\nabla_{\bbeta}\mathcal{L}=\frac{1}{n}\bX^\top(\hat{p}-\by)$\par
+\textbf{Softmax} for multiclass: $P(Y{=}k|\bx)=\frac{e^{\bx^\top\bbeta_k}}{\sum_j e^{\bx^\top\bbeta_j}}$\par
+\rl
+\noindent\textbf{Perceptron:} hard threshold classifier $\hat{y}=\text{sign}(\btheta\cdot\bx+\theta_0)$.\par
+Update rule: $\btheta\leftarrow\btheta+y_i\bx_i$ whenever a point is misclassified.\par
+Converges in $\leq R^2/\gamma^2$ steps only if data are linearly separable ($R$=radius, $\gamma$=margin).\par
+\use{Binary/multiclass classification; calibrated probabilities needed; linear decision boundary is sufficient.}\par
+\bv{Linear boundary $\to$ high bias if true boundary is curved. Low var with regularization. Adding interaction/poly features lowers bias.}\par
+\hp{Regularization $C=1/\lambda$: $C\downarrow$ (more reg) $\to$ bias$\uparrow$, var$\downarrow$; $C\uparrow$ $\to$ overfit risk. class\_weight for imbalance.}\par
+%==================================================
+\sectionrule
+\section{Performance Evaluation}
+\noindent\begin{tabular}{@{}r|cc@{}}
+ & Pred $+$ & Pred $-$\\\hline
+Act $+$ & TP & FN\\
+Act $-$ & FP & TN
+\end{tabular}\par
+TPR (Recall)$=\frac{TP}{TP+FN}$; FPR$=\frac{FP}{FP+TN}$; Precision$=\frac{TP}{TP+FP}$; Acc$=\frac{TP+TN}{N}$\par
+$F_1=\frac{2\cdot\text{Prec}\cdot\text{Rec}}{\text{Prec}+\text{Rec}}$; $F_\beta$: $\beta{>}1$ weights recall more; $\beta{<}1$ weights precision more.\par
+\rl
+\noindent\textbf{Computing metrics from score table:} given a list of samples with true labels and model confidence scores, sort by score descending. For a threshold $\tau$: predict $+$ if score $\geq\tau$, else $-$. Count TP/FP/FN/TN, then apply formulas above. Sweeping $\tau$ from high$\to$low traces the ROC curve (first point: all $-$; last point: all $+$).\par
+\rl
+\noindent\textbf{ROC curve:} plot TPR vs FPR as $\tau$ varies. AUC$\in[0.5,1]$; AUC$=0.5$ = random guess. Raising $\tau\Rightarrow$ fewer positives $\Rightarrow$ precision$\uparrow$, recall$\downarrow$. \textbf{PR curve} better for imbalanced data (minority class matters more).\par
+\rl
+\noindent\textbf{ROC operating point --- expected cost procedure:}\par
+Given costs $c_{FP}$, $c_{FN}$, $c_{TP}$, $c_{TN}$ and class prevalence $p_+=P(Y=+)$:\par
+Expected cost at threshold $\tau$:\par
+$\text{Cost}(\tau)=c_{FP}\cdot\text{FPR}(\tau)\cdot(1-p_+)+c_{FN}\cdot(1-\text{TPR}(\tau))\cdot p_+$\par
+$\quad\quad\quad\quad -c_{TP}\cdot\text{TPR}(\tau)\cdot p_+ - c_{TN}\cdot\text{TNR}(\tau)\cdot(1-p_+)$\par
+\textbf{In practice:} evaluate cost at each candidate $\tau$ (each ROC point); pick $\tau^*=\arg\min\text{Cost}(\tau)$.\par
+\textbf{Shortcut (simplified):} optimal $\tau^*=\frac{c_{FP}(1-p_+)}{c_{FP}(1-p_+)+c_{FN}\cdot p_+}$ with 0-1 payoffs on TP/TN.\par
+High $c_{FN}$ (miss cancer) $\to$ lower $\tau$ (catch more positives, accept more FP). High $c_{FP}$ $\to$ raise $\tau$.\par
+Class prevalence $p_+\downarrow$ (rare disease) $\to$ also shifts optimal $\tau$ upward (harder to justify alarming).\par
+\rl
+\noindent $R^2=1-SS_{res}/SS_{tot}\in(-\infty,1]$ ($1$=perfect; $0$=same as predicting mean). MSE$=\frac{1}{n}\sum(y_i-\hat{y}_i)^2$; MAE$=\frac{1}{n}\sum|y_i-\hat{y}_i|$.\par
+\rl
+\noindent\textbf{Class imbalance:} accuracy misleading; prefer $F_1$/AUC/PR curve. Fixes: SMOTE (oversample minority), undersample majority, adjust threshold $\tau$, use class\_weight.\par
+%==================================================
+\sectionrule
+\section{Model Selection \& Cross-Validation}
+\noindent\textbf{$k$-fold CV:} split data into $k$ equal folds; train on $k-1$, test on remaining 1; rotate and average. $k{=}5$ or $10$ is standard. LOOCV ($k{=}n$): unbiased but high variance and expensive.\par
+\textbf{Stratified CV:} preserve class proportions in each fold (especially important for imbalanced data).\par
+\rl
+\noindent\textbf{Experimental design --- two distinct goals:}\par
+\textbf{Performance evaluation} (how good is my model?): use held-out test set or CV; report point estimate + confidence interval. Never tune on test set.\par
+\textbf{Performance comparison} (is model A better than B?): use paired tests (same folds for both models) so differences in folds cancel out. A result is ``really better'' only if the difference exceeds chance variation.\par
+\textbf{Interpreting under uncertainty:} report mean $\pm$ std (or CI) of CV scores. Overlapping CIs does NOT mean models are equal --- use paired $t$-test or McNemar's test. \textbf{1-SE rule:} prefer simpler model if it's within 1 standard error of the best CV score.\par
+\rl
+\noindent\textbf{Train/Val/Test split:} train to fit; val to tune HPs; test only once at the end. \textbf{Data leakage:} fit all preprocessing (scaling, imputation) on training fold only --- if you use full-dataset stats before splitting, val/test estimates are optimistically biased.\par
+\hp{Grid search (exhaustive); random search (efficient, often just as good); Bayesian optimization (sequential, best for expensive models).}\par
+%==================================================
+\sectionrule
+\section{Decision Theory}
+{\setlength{\tabcolsep}{2pt}
+\noindent\textbf{Loss} $\lambda(\alpha_i|\omega_j)$ = cost of predicting $i$ when truth is $j$; \textbf{risk} $R(\alpha_i|x)=\sum_j\lambda(\alpha_i|\omega_j)P(\omega_j|x)$. Pick action with minimum expected risk.\par
+\begin{tabular}{@{}c|cc@{}}
+ & $\hat{Y}{=}1$ & $\hat{Y}{=}0$\\\hline
+$Y{=}1$ & $\lambda_{11}$ & $\lambda_{01}$\\
+$Y{=}0$ & $\lambda_{10}$ & $\lambda_{00}$
+\end{tabular}\quad
+$R(\tau)=\sum_{i,j}\lambda_{ij}P(\hat{Y}{=}i|Y{=}j,\tau)P(Y{=}j)$\par
+If only mistakes cost: $R(\tau)=\lambda_{10}P_{FP}(\tau)+\lambda_{01}P_{FN}(\tau)=\lambda_{FP}\,\mathrm{FPR}+\lambda_{FN}(1-\mathrm{TPR})$.\par
+With 0-1 loss, choose most probable class: $f^*(x)=\arg\max_k P(Y{=}k|x)$ (Bayes classifier), with Bayes risk $R^*=\inf_f R(f)$.\par
+\textbf{ROC operating point:} high $c_{FN}\Rightarrow$ lower $\tau$ (more sensitive); high $c_{FP}\Rightarrow$ raise $\tau$ (more specific). \textbf{Neyman-Pearson:} maximize TPR subject to FPR$\le\alpha$.\par
+Excess risk: $R(f)-R^*=\E[|2P(Y{=}1|X)-1|\mathbf{1}[f(x)\neq f^*(x)]]$.\par}
+%==================================================
+\sectionrule
+\section{Regularization}
+\noindent Regularization penalizes model complexity to reduce variance (overfitting) at the cost of some bias.\par
+\textbf{Ridge (L2):} $\hat{\bbeta}=\arg\min\,\norm{\by-\bX\bbeta}^2+\lambda\norm{\bbeta}^2$. Closed form: $\hat{\bbeta}^{ridge}=(\bX^\top\bX+\lambda\mathbf{I})^{-1}\bX^\top\by$ (always invertible). Shrinks all coefficients toward zero; none become exactly zero. Best when many features all contribute a little.\par
+\textbf{LASSO (L1):} $\hat{\bbeta}=\arg\min\,\norm{\by-\bX\bbeta}^2+\lambda\sum_j|\beta_j|$. Produces sparse solutions (many $\beta_j{=}0$) $\Rightarrow$ automatic feature selection. No closed form; use coordinate descent.\par
+\textbf{Elastic Net:} $\lambda_1\norm{\bbeta}_1+\lambda_2\norm{\bbeta}_2^2$. Combines sparsity (LASSO) and grouping effect (Ridge selects correlated features together).\par
+\bv{$\lambda\uparrow$: more shrinkage $\to$ bias$\uparrow$, var$\downarrow$. $\lambda=0$: OLS (high var). $\lambda\to\infty$: $\hat\bbeta\to\mathbf{0}$ (underfit).}\par
+\hp{$\lambda$: search log-scale (e.g.\ $10^{-4}$ to $10^{2}$) by CV. Elastic net ratio $\rho\in[0,1]$ (0=Ridge, 1=LASSO).}\par
+\rl
+\noindent\textbf{Other regularizers:} early stopping (halt GD before convergence $\equiv$ implicit L2); dropout (randomly zero activations during training to prevent co-adaptation); data augmentation (more training variety); AIC/BIC for model comparison (BIC penalizes more: $k\log n-2\ell$).\par
+%==================================================
+\sectionrule
+\section{Generative vs.\ Discriminative Models}
+\noindent\textbf{Discriminative} (e.g.\ logistic reg): model $P(Y|X)$ directly. Better with lots of data; don't make distribution assumptions.\par
+\textbf{Generative} (e.g.\ NB, LDA): model $P(X|Y)$ and $P(Y)$; recover $P(Y|X)\propto P(X|Y)P(Y)$ via Bayes. Better with less data; can generate new samples; make stronger assumptions.\par
+\rl
+\noindent\textbf{Na\"{i}ve Bayes:} assumes features are conditionally independent given class.\par
+$\hat{y}=\arg\max_k\left[\log P(Y{=}k)+\textstyle\sum_j\log P(x_j|Y{=}k)\right]$\par
+Gaussian NB: $P(x_j|Y{=}k)=\mathcal{N}(\mu_{jk},\sigma^2_{jk})$; Bernoulli NB: binary features; Multinomial NB: word counts (text).\par
+\use{Text classification, spam filtering, fast baseline, high-dimensional discrete features, small $n$.}\par
+\bv{Strong independence assumption $\to$ high bias when features are correlated. Low var (few params). Works surprisingly well despite violated assumptions.}\par
+\hp{Laplace smoothing $\alpha$ prevents zero probabilities: $\alpha\uparrow\Rightarrow$ more smoothing, higher bias.}\par
+\rl
+\noindent\textbf{LDA} (Linear Discriminant Analysis): Gaussian class conditionals with \emph{shared} $\bSigma$ $\to$ linear boundary.\par
+$\delta_k(\bx)=\bmu_k^\top\bSigma^{-1}\bx-\frac{1}{2}\bmu_k^\top\bSigma^{-1}\bmu_k+\log\pi_k$; predict $\arg\max_k\delta_k(\bx)$.\par
+Estimates: $\hat\pi_k=n_k/n$; $\hat\bmu_k=\frac{1}{n_k}\sum_{i:y_i=k}\bx_i$; pooled $\hat\bSigma$.\par
+\textbf{QDA:} separate $\bSigma_k$ per class $\to$ quadratic boundary; more flexible but more params.\par
+\use{LDA: Gaussian features, small $n$, equal covariances, also useful for dim reduction. QDA: Gaussian but unequal covariances.}\par
+\bv{LDA: higher bias (linear boundary) but lower var (fewer params). QDA: lower bias, higher var ($O(p^2)$ params/class). Prefer LDA when $n$ is small relative to $p$.}\par
+%==================================================
+\sectionrule
+\section{Trees \& Ensembles}
+\noindent\textbf{Decision Tree:} recursively split on feature/threshold to minimize impurity.\par
+Gini $=1-\sum_k p_k^2$ (faster); Entropy $H=-\sum_k p_k\log_2 p_k$; Info gain$=H(\text{parent})-\sum_c\frac{n_c}{n}H(c)$. Regression: minimize RSS. Regularize by max depth, min samples/leaf, or pruning ($\alpha$).\par
+\use{Tabular data; need interpretability; handles mixed feature types; no scaling needed.}\par
+\bv{Deep tree: very low bias, very high var (memorizes training data). Shallow: high bias, low var. Pruning trades bias$\uparrow$ for var$\downarrow$.}\par
+\hp{max\_depth ($\uparrow$: var$\uparrow$, bias$\downarrow$); min\_samples\_leaf ($\uparrow$: var$\downarrow$); ccp\_alpha (pruning strength).}\par
+\rl
+\noindent\textbf{Bagging:} train $B$ trees each on a different bootstrap sample; average (regression) or majority vote (classification). Reduces variance; OOB ($\approx37\%$ of data per tree) gives free validation.\par
+\textbf{Random Forest:} bagging $+$ random subset of $m\approx\sqrt{p}$ (classif.) or $p/3$ (regr.) features at each split. Decorrelating trees reduces variance further. Feature importance = avg impurity decrease per feature.\par
+\use{Robust default for tabular, nonlinear data; handles noise and outliers well.}\par
+\bv{Low bias (deep trees) + much lower var than single tree. Adding more trees always helps or is neutral (var$\downarrow$, bias flat).}\par
+\hp{n\_estimators ($\uparrow$: var$\downarrow$, never hurts, just slower); max\_features $m$ ($\downarrow$: more decorrelation, slight bias$\uparrow$); max\_depth; min\_samples\_leaf.}\par
+\rl
+\noindent\textbf{AdaBoost:} sequential; upweight misclassified examples. Learner weight: $\alpha_t=\frac{1}{2}\ln\frac{1-\epsilon_t}{\epsilon_t}$. Final: $H(x)=\text{sign}(\sum_t\alpha_t h_t(x))$.\par
+\textbf{Gradient Boosting:} at each step, fit a new tree to the \emph{negative gradient} of the loss (pseudo-residuals). Corrects mistakes of the current ensemble.\par
+\textbf{XGBoost:} GBM $+$ L2 leaf regularization $+$ 2nd-order Taylor approximation $+$ column/row subsampling.\par
+\use{Tabular data; often beats RF; Kaggle workhorse. Sensitive to noise (unlike RF).}\par
+\bv{Boosting primarily reduces bias (sequential correction). Can overfit with too many rounds $\to$ use early stopping.}\par
+\hp{n\_estimators / num\_boost\_rounds ($\uparrow$: bias$\downarrow$, overfit risk$\uparrow$; use early stopping on val set); learning\_rate/eta (smaller $\eta$ needs more rounds but generalizes better; try $0.01$--$0.1$); max\_depth ($3$--$6$ typical); subsample/colsample\_bytree (subsampling, regularizing); reg\_lambda (L2); min\_child\_weight.}\par
+%==================================================
+\sectionrule
+\section{Neural Networks}
+\noindent\textbf{Forward pass:} $z^{(l)}=W^{(l)}a^{(l-1)}+b^{(l)}$; $a^{(l)}=f(z^{(l)})$ (activation applied elementwise).\par
+\textbf{Activations:} ReLU$=\max(0,x)$ (default hidden; avoids vanishing gradient); Leaky ReLU (fixes dead neurons: $\max(\alpha x,x)$); sigmoid/softmax at output for probabilities; tanh centered.\par
+\textbf{Loss:} Regression: MSE. Binary classif: BCE. Multiclass: CCE $=-\sum_k y_k\log\hat{p}_k$.\par
+\rl
+\noindent\textbf{Backpropagation} applies the chain rule layer-by-layer to compute gradients:\par
+$\delta^{(l)}=(W^{(l+1)})^\top\delta^{(l+1)}\odot f'(z^{(l)})$;\quad $\frac{\partial\mathcal{L}}{\partial W^{(l)}}=\delta^{(l+1)}(a^{(l)})^\top$\par
+\rl
+\noindent\textbf{Optimizers:} SGD: $\theta\leftarrow\theta-\eta g$. Momentum: $v\leftarrow\beta v-\eta g$, $\theta\leftarrow\theta+v$ (accelerates through ravines). Adam: per-parameter adaptive LR using running estimates of 1st ($m$) and 2nd ($v$) moments of gradient; $\theta\leftarrow\theta-\frac{\eta\hat{m}}{\sqrt{\hat{v}}+\epsilon}$. Defaults: $\beta_1{=}0.9$, $\beta_2{=}0.999$. Adam usually best default.\par
+\textbf{Initialization:} Xavier $\sim\mathcal{N}(0,\frac{2}{n_{in}+n_{out}})$ for sigmoid/tanh; He $\sim\mathcal{N}(0,\frac{2}{n_{in}})$ for ReLU. Prevents vanishing/exploding gradients at start.\par
+\textbf{Batch norm:} normalize per mini-batch, then scale/shift with learned params; stabilizes, speeds training, mild regularizer.\par
+\use{Large datasets; images (CNN); sequences (Transformer); when features are unknown/raw.}\par
+\bv{Wide/deep: low bias, high var. Narrow/shallow: high bias. Dropout + weight decay reduce var.}\par
+\hp{LR $\eta$ (most critical; use LR schedule or warmup); batch size ($\uparrow$: smoother, but can generalize worse; try 32--256); depth/width ($\uparrow$: capacity$\uparrow$); dropout $p$ ($0.1$--$0.5$; var$\downarrow$, bias$\uparrow$); weight decay $\lambda$; epochs $+$ early stopping patience.}\par
+\rl
+\noindent\textbf{CNNs:} local filters with shared weights scan across spatial positions $\to$ learns hierarchical features. Output size$=\lfloor(n+2p-f)/s\rfloor+1$. Max pooling adds translation invariance.\par
+Conv$\to$BN$\to$ReLU$\to$Pool$\to\cdots\to$FC$\to$Softmax.\par
+\use{Images; any grid-structured data with local patterns (audio, time series).}\par
+\hp{Filter size $f$ (3$\times$3 common); \#filters (capacity); stride $s$; padding $p$.}\par
+\rl
+\noindent\textbf{Transformers:} compute \emph{self-attention} to let every position attend to every other.\par
+$Q=XW_Q$, $K=XW_K$, $V=XW_V$; $A=\text{softmax}\!\left(\tfrac{QK^\top}{\sqrt{d_k}}\right)V$. Dividing by $\sqrt{d_k}$ prevents softmax saturation.\par
+Multi-head: $h$ parallel heads capture different relationships. Positional encoding injects order info. $O(n^2d)$ but fully parallelizable.\par
+\use{Sequences, NLP, long-range dependencies. Encoder-only (BERT); decoder-only (GPT); encoder-decoder (seq2seq).}\par
+\textbf{Autoencoders:} encoder compresses to latent code; decoder reconstructs input. Learns compact representations by minimizing reconstruction error. \textbf{Masked autoencoder:} randomly mask part of input, encode visible part, reconstruct missing part from context.\par
+\hp{\#heads $h$; model dim $d_{model}$; \#layers; dropout; LR warmup steps.}\par
+%==================================================
+\sectionrule
+\section{PCA \& Dimensionality Reduction}
+\noindent\textbf{Curse of dimensionality:} as $d$ grows, data becomes exponentially sparse; distances concentrate (everything looks equally far); KNN and density estimates degrade. Need $n\sim e^d$ to maintain coverage.\par
+\textbf{PCA} finds orthogonal directions of maximum variance (principal components):\par
+(1) Center: $\tilde{X}=X-\mathbf{1}\bar{x}^\top$. (2) SVD $\tilde{X}=U\Sigma V^\top$ or eigen-decomp $S=\frac{1}{n-1}\tilde{X}^\top\tilde{X}$. (3) Sort eigenvectors by eigenvalue $\lambda_k\downarrow$. (4) Project: $Z=\tilde{X}V_{[:,1:d']}$.\par
+Variance explained by PC $k$: $\lambda_k/\sum_j\lambda_j$. Pick $d'$ via scree plot elbow or $\geq90\%$ var retained. Standardize features before PCA if units differ.\par
+\use{Remove redundant/correlated features; visualization; preprocessing for linear models; noise reduction. Learn PCA transform for training, apply to test.}\par
+\bv{$d'\downarrow$: smoother/denoised (var$\downarrow$, but downstream bias$\uparrow$). $d'\uparrow$: retains more info but keeps noise.}\par
+Nonlinear alternatives: t-SNE (visualization only, 2D/3D); UMAP (preserves local + global structure); kernel PCA.\par
+\textbf{Autoencoder}: learn compressed representation by reconstructing input
+\textbf{Masked AE}: learn deeper representations by reconstructing missing parts
+%==================================================
+\sectionrule
+\section{Clustering (Unsupervised)}
+\noindent\textbf{Which method when?} \textbf{K-Means:} spherical/equal-size clusters, large $n$, $k$ known. \textbf{GMM:} elliptical clusters, soft membership, also density estimation. \textbf{Hierarchical:} unknown $k$, need dendrogram. \textbf{DBSCAN:} arbitrary shapes, outliers, $k$ unknown. \textbf{Spectral:} non-convex/manifold clusters; graph connectivity matters more than raw distance.\par
+\rl
+\noindent\textbf{Distances / similarity:} Euclidean ($L_2$) $=\sqrt{\sum_j(x_j-y_j)^2}$ for K-Means/hierarchical; Manhattan ($L_1$) $=\sum_j|x_j-y_j|$ more robust; cosine $=\frac{\bx\cdot\by}{\norm{\bx}\norm{\by}}$ for text; Mahalanobis uses covariance when features are correlated. Standardize before Euclidean/Manhattan.\par
+\rl
+\noindent\textbf{K-Means} (hard assignments, minimize within-cluster SSE): initialize centroids $\to$ assign each point to nearest centroid $\to$ recompute means $\to$ repeat. E: $C_i=\arg\min_k\norm{\bx_i-\bmu_k}^2$; M: $\bmu_k=\frac{1}{|C_k|}\sum_{i\in C_k}\bx_i$. Intuition: each centroid is the average representative of its region. Pros: fast/simple. Cons: need $k$, local minima, sensitive to init/scale, poor for non-spherical clusters. Use K-means++; choose $k$ by elbow or silhouette $s(i)=\frac{b(i)-a(i)}{\max(a,b)}$.\par
+\rl
+\noindent\textbf{Hierarchical} (agglomerative): start with each point alone $\to$ repeatedly merge closest clusters $\to$ cut dendrogram at chosen height. Linkage: single=min (chains), complete=max (compact), average, Ward=min variance. Intuition: builds a nested family of clusterings. Pros: no $k$ upfront, interpretable tree. Cons: greedy, expensive, early mistakes cannot be undone.\par
+\rl
+\noindent\textbf{DBSCAN} (density-based): choose $\varepsilon$, minPts. Mark core points with at least minPts neighbors in $\varepsilon$-ball, connect nearby core points, then attach border points; leftovers are noise. Intuition: clusters are dense regions separated by sparse gaps. Pros: arbitrary shapes, finds outliers, no $k$. Cons: sensitive to $\varepsilon$, struggles with varying density/high dimension.\par
+\rl
+\noindent\textbf{Spectral clustering:} build similarity graph $\to$ graph Laplacian $\to$ top eigenvectors as embedding $\to$ run K-Means there. Intuition: cut graph into strongly connected groups, not just nearest points in original space. Pros: handles non-convex clusters. Cons: expensive, must choose similarity graph/$k$.\par
+\rl
+\noindent\textbf{Density estimation} asks for smooth $p(x)$, not just cluster labels. \textbf{Histogram:} split into bins, estimate density by count/(bin width$\times n$); simple/fast but jagged and bin-width sensitive. \textbf{KDE:} place a smooth kernel at each point and sum, $\hat p(x)=\frac{1}{nh}\sum_i K\!\left(\frac{x-x_i}{h}\right)$; steps: choose kernel and bandwidth $h$, then add all bumps. Intuition: each point spreads local influence. Pros: smooth, nonparametric. Cons: bandwidth-sensitive, slower in high $n/d$. \textbf{GMM:} $\hat p(x)=\sum_k\pi_k\mathcal{N}(x|\mu_k,\Sigma_k)$ fit by EM: initialize $\to$ E-step compute responsibilities $r_{ik}$ $\to$ M-step update $(\pi_k,\mu_k,\Sigma_k)$ $\to$ repeat. Intuition: data come from several Gaussian sources. Pros: probabilistic, flexible, soft clustering. Cons: need $k$, init sensitive, Gaussian assumption.\par
+%==================================================
+\sectionrule
+\section{Reinforcement Learning}
+\noindent\textbf{Framework:} agent observes state $s$, takes action $a$, gets reward $r$, transitions to $s'$. Goal: find policy $\pi(a|s)$ maximizing cumulative reward.\par
+\textbf{Key components --- what each means:}\par
+\textbf{Environment:} the world the agent interacts with (chess board, maze, stock market).\par
+\textbf{State $s$:} complete summary of current situation (board config, robot position, inventory level). Must satisfy Markov property.\par
+\textbf{Action $a$:} what the agent can do (move piece, go left/right, buy/sell). Set of valid actions $A$.\par
+\textbf{Reward $r_t$:} scalar feedback signal received after each action. Encodes the \emph{goal} (not how to achieve it). Examples: $-1$ per step in maze (encourages speed); $+1$ on win/0 elsewhere in chess.\par
+\textbf{Return $G_t$:} total discounted future reward from time $t$ (what we actually optimize).\par
+\textbf{Policy $\pi(a|s)$:} the agent's strategy --- maps states to action probabilities. Deterministic: $a=\pi(s)$. Stochastic: $\pi(a|s)=P(a_t=a|s_t=s)$ (needed for exploration).\par
+\textbf{State value $V^\pi(s)$:} expected return starting from $s$ and following $\pi$. ``How good is it to be in this state?''\par
+\textbf{Action value $Q^\pi(s,a)$:} expected return from $s$, taking $a$ once, then following $\pi$. ``How good is it to take this specific action?''\par
+\textit{Scenario mapping tip:} identify (1) what decisions are made [actions], (2) what information is available [state], (3) what success/failure looks like [reward], (4) whether task ends [episodic] or continues forever.\par
+\textbf{Markov property:} $P(s_{t+1}|s_t)=P(s_{t+1}|s_t,s_{t-1},\ldots)$ --- current state is all you need. \textbf{Building blocks:} Markov Chain $\{S,P\}$ $\to$ MRP $+\{R,\gamma\}$ $\to$ \textbf{MDP} $+\{A\}$. RL does NOT assume known $P$ or $R$ (unlike dynamic programming).\par
+\rl
+\noindent\textbf{Return:} $G_t=\sum_{k=0}^\infty\gamma^k R_{t+k+1}=R_{t+1}+\gamma G_{t+1}$.\par
+$\gamma\to0$: myopic (only immediate reward matters); $\gamma\to1$: far-sighted (all future matters). Episodic: $G_t=\sum_{t}^T R_t$ (no discounting needed but OK). Continuing tasks: need $\gamma<1$ for convergence.\par
+\rl
+\noindent\textbf{Value functions} (how good is a state or state-action pair):\par
+$V^\pi(s)=\E_\pi[G_t|S_t=s]$ --- expected return from $s$ under $\pi$.\par
+$Q^\pi(s,a)=\E_\pi[G_t|S_t=s,A_t=a]$ --- expected return from $s$, taking $a$, then following $\pi$.\par
+Relationship: $V^\pi(s)=\sum_a\pi(a|s)Q^\pi(s,a)$\par
+\rl
+\noindent\textbf{Bellman equations} (recursive decomposition --- ``backup'' property):\par
+$V^\pi(s)=\E_\pi[R_{t+1}+\gamma V^\pi(S_{t+1})|S_t=s]=\sum_a\pi(a|s)\sum_{s',r}P(s',r|s,a)[r+\gamma V^\pi(s')]$\par
+$Q^\pi(s,a)=\sum_{s',r}P(s',r|s,a)\left[r+\gamma\sum_{a'}\pi(a'|s')Q^\pi(s',a')\right]$\par
+\textbf{Bellman optimality:} $V^*(s)=\max_a\sum_{s',r}P(s',r|s,a)[r+\gamma V^*(s')]$\par
+$Q^*(s,a)=\sum_{s',r}P(s',r|s,a)[r+\gamma\max_{a'}Q^*(s',a')]$\par
+\rl
+\noindent\textbf{Dynamic Programming} (requires full known MDP):\par
+\textbf{1.\ Policy Evaluation:} iteratively apply Bellman expectation to get $V^\pi$ from $V_0=0$: $V_{k+1}(s)=\sum_a\pi(a|s)\sum_{s',r}P[r+\gamma V_k(s')]$. Converges to $V^\pi$.\par
+\textbf{2.\ Policy Improvement:} given $V^\pi$, greedily update $\pi'(s)=\arg\max_a Q^\pi(s,a)=\arg\max_a\sum_{s',r}P[r+\gamma V^\pi(s')]$. Guaranteed $V^{\pi'}\geq V^\pi$.\par
+\textbf{3.\ Policy Iteration:} alternate Eval $\leftrightarrow$ Improve until stable $\to\pi^*$. (Full eval each time --- slow.)\par
+\textbf{4.\ Value Iteration:} only 1 sweep of eval per improve step. $V_{k+1}(s)=\max_a\sum_{s',r}P[r+\gamma V_k(s')]$. Converges to $V^*$ faster. Extract: $\pi^*(s)=\arg\max_a Q^*(s,a)$.\par
+\hp{$\gamma$ (discount; $\uparrow$ values long-term); convergence threshold $\theta$.}\par
+\rl
+\noindent\textbf{Monte Carlo} (model-free; complete episodes; no bootstrapping):\par
+Run episode under $\pi$; average actual returns $G_t$ over all visits to each $(s,a)$ across episodes: $V^\pi(s)\approx\text{avg}(G_t)$. First-visit: count only the first occurrence of $s$ per episode. For control: use $Q^\pi(s,a)$ (no model needed) $+$ $\varepsilon$-greedy for exploration.\par
+\bv{Zero bias (exact returns); high variance (noisy single episodes). Episodic tasks only.}\par
+\hp{$\alpha$ (step-size); $\varepsilon$ for $\varepsilon$-greedy (decay over time: explore early, exploit later).}\par
+\rl
+\noindent\textbf{Temporal Difference (TD) Learning} (model-free; online; bootstraps):\par
+$V(s)\leftarrow V(s)+\alpha\underbrace{[r+\gamma V(s')-V(s)]}_{\text{TD error }\delta_t}$\par
+Updates after every step using estimated next-state value $V(s')$ (not waiting for full episode). TD target: $r+\gamma V(s')$.\par
+\bv{Biased (bootstraps from estimate); lower var than MC; online (doesn't need episodes to finish).}\par
+\rl
+\noindent\textbf{Q-Learning} (off-policy TD): $Q(s,a)\leftarrow Q(s,a)+\alpha[r+\gamma\max_{a'}Q(s',a')-Q(s,a)]$\par
+Uses greedy max over next state regardless of action taken (off-policy). Converges to $Q^*$.\par
+\textbf{SARSA} (on-policy): $Q(s,a)\leftarrow Q(s,a)+\alpha[r+\gamma Q(s',a')-Q(s,a)]$, $a'\sim\pi$. Safer; learns value of policy it actually follows (avoids risky shortcuts).\par
+\use{Q-learning: find optimal policy offline. SARSA: safe online learning where bad behavior has real cost.}\par
+\hp{$\alpha$ (LR; decay for convergence); $\varepsilon$ decay schedule; $\gamma$.}\par
+\rl
+\noindent\textbf{Exploration strategies:} $\varepsilon$-greedy: prob $\varepsilon$ take random action; else $\arg\max_a Q$. Decay $\varepsilon$ over time. UCB: $a^*=\arg\max_a[Q(a)+c\sqrt{\ln t/N(a)}]$ (optimism in the face of uncertainty; $c\uparrow$: more exploration).\par
+\textbf{Policy Gradient (REINFORCE):} $\nabla_{\theta} J(\theta)=\E[G_t\nabla_{\theta}\log\pi_\theta(a_t|s_t)]$. Works with continuous action spaces; high variance; subtract a baseline (e.g.\ $V^\pi(s)$) to reduce variance.\par
+\textbf{DQN:} uses a neural network to approximate $Q^*(s,a)$ for large/continuous state spaces. Two tricks for stability: \emph{experience replay} (sample past transitions randomly to break correlation) and \emph{target network} (separate frozen copy of $Q$ network updated periodically).\par
+%==================================================
+\sectionrule
+\section{Gradient Descent \& Optimization}
+\noindent $\theta\leftarrow\theta-\eta\nabla_{\theta}\mathcal{L}$. LR $\eta$ too high $\to$ diverge; too low $\to$ very slow.\par
+\textbf{Batch GD:} uses all data each step (stable, slow). \textbf{SGD:} one sample (fast, noisy, can escape local minima). \textbf{Mini-batch} (32--256): standard in practice (balances stability and speed).\par
+LR schedules: step decay, cosine annealing, warmup $+$ decay. Adam is usually the best default.\par
+Convex loss $\Rightarrow$ GD finds global min. NN losses are non-convex; saddle points are more common than local minima in high-$d$; SGD noise helps escape them.\par
+%==================================================
+\sectionrule
+\section{Practical Reference}
+\noindent\textbf{Feature scaling:} standardize ($\mu{=}0$, $\sigma{=}1$) for KNN, PCA, NN, GD-based, regularized models. \emph{Not} needed for tree-based methods.\par
+\textbf{Overfit} (train$\ll$val error): add regularization, get more data, use simpler model, dropout, early stopping, data augmentation.\par
+\textbf{Underfit} (both errors high): increase capacity (depth/width), add features, reduce regularization, train longer.\par
+\textbf{Loss map:} Regression: MSE (outlier-sensitive)/MAE (robust)/Huber. Binary: BCE. Multiclass: CCE.\par
+\textbf{CV discipline:} all preprocessing \emph{inside} the CV loop; never touch the test set until final evaluation; tune on val, report on test.\par
+\textbf{Collinearity:} VIF$>$10 is concerning; Ridge handles better than LASSO (LASSO may pick one correlated feature arbitrarily). Large $p/n$ $\Rightarrow$ LASSO or elastic net.\par
+\textbf{Class imbalance:} SMOTE, class weights, PR-AUC over ROC-AUC, threshold from cost matrix.\par
+\rl
+{\setlength{\tabcolsep}{2pt}\renewcommand{\arraystretch}{0.9}
+\noindent\textbf{Full model comparison:}\par
+{\fontsize{4.3pt}{4.8pt}\selectfont
+\textbf{Lin/Logistic}\hspace{0.4em}
+best: linear, interpretable effects; pros: fast, simple, calibrated probs/coeffs; cons: misses nonlinearities unless engineered.\par
+\textbf{KNN}\hspace{2.6em}
+best: small nonlinear problems; pros: nonparametric, intuitive; cons: slow at prediction, scaling-sensitive, weak in high $d$.\par
+\textbf{NB/LDA/QDA}\hspace{0.5em}
+best: small-$n$ probabilistic baselines; pros: fast, low variance, good if assumptions fit; cons: assumptions may fail, QDA higher variance.\par
+\textbf{Trees/RF}\hspace{1.7em}
+best: tabular nonlinear data; pros: little preprocessing, automatic interactions, robust; cons: trees overfit, RF less interpretable.\par
+\textbf{Boost/XGB}\hspace{0.9em}
+best: strong tabular performance; pros: high accuracy, flexible; cons: more tuning, noise/overfit risk.\par
+\textbf{NN/CNN}\hspace{1.8em}
+best: large unstructured data; pros: learns features, very flexible; cons: data/compute hungry, low interpretability.\par
+\textbf{Transformer}\hspace{0.2em}
+best: text/sequence context; pros: parallel, captures long-range deps; cons: attention cost high, large-data hungry.\par
+}
+
+%==================================================
+\end{multicols*}
+\end{document}
